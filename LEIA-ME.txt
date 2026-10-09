@@ -1,0 +1,16 @@
+PAINEL DE PRODUTIVIDADE T3 SECO
+
+1. Extraia os arquivos na pasta:
+C:\Users\ivferreira\Documents\GitHub\produtividade-t3-seco
+2. Abra index.html com dois cliques para testar no navegador.
+3. O arquivo produtividade_t3.js incluído contém a exportação recebida em 09/10/2026 às 03:53. Execute novamente ExportarProdutividadePainel no Excel para atualizar.
+
+O HTML consulta produtividade_t3.js a cada minuto. A macro ainda é executada manualmente. O agendamento da macro e o envio automático ao GitHub ainda precisam ser configurados.
+
+O arquivo .gitignore impede que as planilhas e arquivos temporários entrem nos novos commits. Se uma planilha já tiver sido publicada, esse arquivo não a remove do histórico.
+
+Metas, horários, resultados e rankings vêm da planilha. As metas desta exportação são 350 caixas na separação e 450 no remonte por pessoa.
+Staff cadastrado: colaboradores da aba CADASTRO_SECO. Ausentes: posições contendo falta, férias, afastamento ou licença. Posições vazias não são contadas como presentes.
+As médias dos rankings usam as 6,5 horas produtivas previstas na planilha. O horário da base é apresentado separadamente do horário da exportação.
+
+O volume geral mantém as fórmulas de RESUMO_HORA, enquanto os rankings mantêm as fórmulas de DASH. Nenhuma fórmula foi alterada por este painel.
