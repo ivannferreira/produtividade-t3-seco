@@ -142,55 +142,37 @@ try {
     }
 
     # ---------- Projeção ----------
-    # Somente estas tipologias podem aparecer no painel.
-    $tipologiasValidas = @(
-        "SEPARAÇÃO(SECO)",
-        "SEPARAÇÃO(DOCE)",
-        "SEPARAÇÃO(PACK)",
-        "SEPARAÇÃO(QUIMICO)",
-        "REMONTE",
-        "EMPILHADOR",
-        "APOIO",
-        "DEVOLUÇÃO"
-    )
-
+    # Espelha EXATAMENTE a tabela oficial da aba T3.
+    # T3!AX3:BA10 = 8 tipologias.
     $projection = @()
 
-    # Primeiro tenta ler diretamente da tabela oficial da aba T3 (AX:BA).
-    for ($r = 2; $r -le 25; $r++) {
+    for ($r = 3; $r -le 10; $r++) {
         $tipologia = Get-Text $t3.Cells.Item($r,50).Value2   # AX
+        $mediaRaw  = $t3.Cells.Item($r,51).Value2           # AY
+        $staffRaw  = $t3.Cells.Item($r,52).Value2           # AZ
+        $projRaw   = $t3.Cells.Item($r,53).Value2           # BA
+
         if (-not $tipologia) { continue }
 
-        $tipologiaUpper = $tipologia.ToUpperInvariant()
-        $match = $tipologiasValidas | Where-Object { $_.ToUpperInvariant() -eq $tipologiaUpper } | Select-Object -First 1
-        if (-not $match) { continue }
-
-        $mediaRaw = $t3.Cells.Item($r,51).Value2             # AY
-        $staffRaw = $t3.Cells.Item($r,52).Value2             # AZ
-        $projRaw  = $t3.Cells.Item($r,53).Value2             # BA
-
         $projection += [PSCustomObject]@{
-            tipologia = $match
-            media_dia = if ($mediaRaw -eq "-" -or $null -eq $mediaRaw -or $mediaRaw -eq "") { "-" } else { Get-Number $mediaRaw }
-            staff = if ($staffRaw -eq "-" -or $null -eq $staffRaw -or $staffRaw -eq "") { "-" } else { [int](Get-Number $staffRaw) }
-            projecao = if ($projRaw -eq "-" -or $null -eq $projRaw -or $projRaw -eq "") { "-" } else { [int](Get-Number $projRaw) }
+            tipologia = $tipologia
+            media_dia = if ($null -eq $mediaRaw -or $mediaRaw -eq "" -or $mediaRaw -eq "-") { "-" } else { Get-Number $mediaRaw }
+            staff = if ($null -eq $staffRaw -or $staffRaw -eq "" -or $staffRaw -eq "-") { "-" } else { [int](Get-Number $staffRaw) }
+            projecao = if ($null -eq $projRaw -or $projRaw -eq "" -or $projRaw -eq "-") { "-" } else { [int](Get-Number $projRaw) }
         }
     }
 
-    # Segurança: remove duplicados e mantém a ordem oficial.
-    $projectionFinal = @()
-    foreach ($tv in $tipologiasValidas) {
-        $item = $projection | Where-Object { $_.tipologia -eq $tv } | Select-Object -First 1
-        if ($item) { $projectionFinal += $item }
-    }
-    $projection = $projectionFinal
+    # Totais oficiais da própria T3.
+    $staffProjTotal = [int](Get-Number $t3.Cells.Item(11,52).Value2)   # AZ11
+    $projecaoTurno  = [int](Get-Number $t3.Cells.Item(11,53).Value2)   # BA11
 
-    # Se a projeção do card não estiver disponível, soma somente linhas numéricas válidas.
-    if ($projecaoTurno -le 0) {
-        $projecaoTurno = [int](($projection | Where-Object { $_.projecao -is [ValueType] } | Measure-Object -Property projecao -Sum).Sum)
-        if ($projecaoTurno -gt 0) {
-            $atingimento = $producaoReal / $projecaoTurno
-        }
+    # Produção real = soma dos totais individuais exibidos no DASH.
+    $producaoReal = [int](($people | Measure-Object -Property total -Sum).Sum)
+
+    if ($projecaoTurno -gt 0) {
+        $atingimento = $producaoReal / $projecaoTurno
+    } else {
+        $atingimento = 0
     }
 
     # ---------- Ausências ----------
