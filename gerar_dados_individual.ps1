@@ -85,9 +85,10 @@ try {
     $presentes = [int](Get-Number (Get-ValueBelowLabel $dash "PRESENTES" 2 "D9"))
     $ausentes = [int](Get-Number (Get-ValueBelowLabel $dash "AUSENTES" 2 "G9"))
     $presenca = Get-Number (Get-ValueBelowLabel $dash "% PRESENÇA" 2 "J9")
-    $producaoReal = Get-Number (Get-ValueBelowLabel $dash "PRODUÇÃO REAL" 2 "M9")
+    # Produção real será calculada pela soma dos colaboradores para evitar leitura incorreta de célula mesclada.
+    $producaoReal = 0
     $projecaoTurno = Get-Number (Get-ValueBelowLabel $dash "PROJEÇÃO TURNO" 2 "R9")
-    $atingimento = Get-Number (Get-ValueBelowLabel $dash "ATINGIMENTO" 2 "V9")
+    $atingimento = 0
 
     # ---------- Tabela individual ----------
     $people = @()
@@ -132,27 +133,63 @@ try {
         }
     }
 
-    # ---------- Projeção ----------
-    $projection = @()
-    $projBlank = 0
-    for ($r = 14; $r -le 30; $r++) {
-        $tipologia = Get-Text $dash.Cells.Item($r,20).Value2
-        if (-not $tipologia) {
-            $projBlank++
-            if ($projBlank -ge 3 -and $projection.Count -gt 0) { break }
-            continue
-        }
+    # Produção real = soma do TOTAL de todos os colaboradores listados.
+    $producaoReal = [int](($people | Measure-Object -Property total -Sum).Sum)
+    if ($projecaoTurno -gt 0) {
+        $atingimento = $producaoReal / $projecaoTurno
+    } else {
+        $atingimento = 0
+    }
 
-        $projBlank = 0
-        $mediaRaw = $dash.Cells.Item($r,21).Value2
-        $staffRaw = $dash.Cells.Item($r,22).Value2
-        $projRaw = $dash.Cells.Item($r,23).Value2
+    # ---------- Projeção ----------
+    # Somente estas tipologias podem aparecer no painel.
+    $tipologiasValidas = @(
+        "SEPARAÇÃO(SECO)",
+        "SEPARAÇÃO(DOCE)",
+        "SEPARAÇÃO(PACK)",
+        "SEPARAÇÃO(QUIMICO)",
+        "REMONTE",
+        "EMPILHADOR",
+        "APOIO",
+        "DEVOLUÇÃO"
+    )
+
+    $projection = @()
+
+    # Primeiro tenta ler diretamente da tabela oficial da aba T3 (AX:BA).
+    for ($r = 2; $r -le 25; $r++) {
+        $tipologia = Get-Text $t3.Cells.Item($r,50).Value2   # AX
+        if (-not $tipologia) { continue }
+
+        $tipologiaUpper = $tipologia.ToUpperInvariant()
+        $match = $tipologiasValidas | Where-Object { $_.ToUpperInvariant() -eq $tipologiaUpper } | Select-Object -First 1
+        if (-not $match) { continue }
+
+        $mediaRaw = $t3.Cells.Item($r,51).Value2             # AY
+        $staffRaw = $t3.Cells.Item($r,52).Value2             # AZ
+        $projRaw  = $t3.Cells.Item($r,53).Value2             # BA
 
         $projection += [PSCustomObject]@{
-            tipologia = $tipologia
-            media_dia = if ($mediaRaw -eq "-" -or $null -eq $mediaRaw) { "-" } else { Get-Number $mediaRaw }
-            staff = if ($staffRaw -eq "-" -or $null -eq $staffRaw) { "-" } else { [int](Get-Number $staffRaw) }
-            projecao = if ($projRaw -eq "-" -or $null -eq $projRaw) { "-" } else { [int](Get-Number $projRaw) }
+            tipologia = $match
+            media_dia = if ($mediaRaw -eq "-" -or $null -eq $mediaRaw -or $mediaRaw -eq "") { "-" } else { Get-Number $mediaRaw }
+            staff = if ($staffRaw -eq "-" -or $null -eq $staffRaw -or $staffRaw -eq "") { "-" } else { [int](Get-Number $staffRaw) }
+            projecao = if ($projRaw -eq "-" -or $null -eq $projRaw -or $projRaw -eq "") { "-" } else { [int](Get-Number $projRaw) }
+        }
+    }
+
+    # Segurança: remove duplicados e mantém a ordem oficial.
+    $projectionFinal = @()
+    foreach ($tv in $tipologiasValidas) {
+        $item = $projection | Where-Object { $_.tipologia -eq $tv } | Select-Object -First 1
+        if ($item) { $projectionFinal += $item }
+    }
+    $projection = $projectionFinal
+
+    # Se a projeção do card não estiver disponível, soma somente linhas numéricas válidas.
+    if ($projecaoTurno -le 0) {
+        $projecaoTurno = [int](($projection | Where-Object { $_.projecao -is [ValueType] } | Measure-Object -Property projecao -Sum).Sum)
+        if ($projecaoTurno -gt 0) {
+            $atingimento = $producaoReal / $projecaoTurno
         }
     }
 
