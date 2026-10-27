@@ -44,6 +44,62 @@ async function carregarDados(){
   const resposta = await fetch('dados_produtividade_individual.json?ts=' + Date.now(), {cache:'no-store'});
   if(!resposta.ok) throw new Error('Falha ao carregar dados: ' + resposta.status);
   D = await resposta.json();
+
+  // Normalização para aceitar tanto o JSON antigo quanto o gerado automaticamente.
+  D.meta = D.meta || {};
+
+  D.people = (D.people || []).map((p, i) => ({
+    n: p.n ?? (i + 1),
+    matricula: p.matricula ?? "",
+    colaborador: p.colaborador ?? p.nome ?? "",
+    tipo: p.tipo ?? "",
+    posicao: p.posicao ?? p["posição"] ?? "",
+    horas: Array.isArray(p.horas) ? p.horas : [0,0,0,0,0,0,0,0],
+    total: Number(p.total ?? 0),
+    media: Number(p.media ?? 0),
+    ating: (p.ating === null || p.ating === undefined || p.ating === "") ? null : Number(p.ating),
+    status: p.status ?? "",
+    justificativa: p.justificativa ?? "",
+    resp: p.resp ?? p.responsavel ?? p.responsável ?? ""
+  }));
+
+  D.projection = (D.projection || D.projecao || []).map(r => {
+    if (Array.isArray(r)) return r;
+    return [
+      r.tipologia ?? r.tipo ?? "",
+      r.media ?? r.media_dia ?? r["média_dia"] ?? "-",
+      r.staff ?? "-",
+      r.projecao ?? r["projeção"] ?? "-"
+    ];
+  });
+
+  D.reasons = (D.reasons || D.motivos || []).map(r => {
+    if (Array.isArray(r)) return r;
+    return [r.motivo ?? r.nome ?? "", Number(r.quantidade ?? r.qtd ?? r.count ?? 0)];
+  });
+
+  D.absences = D.absences || D.ausencias || D.ausências || [];
+
+  // Se o JSON não trouxer a lista de motivos, calcula diretamente pelas justificativas.
+  if (!D.reasons.length) {
+    const motivos = [
+      "FALTA DE ETIQUETA",
+      "OSCILAÇÃO COLETOR",
+      "BAIXA SISTÊMICA",
+      "PAUSA / CEIA",
+      "DIVERGÊNCIA ESTOQUE",
+      "RETRABALHO",
+      "BAIXA PERFORMANCE"
+    ];
+    D.reasons = motivos.map(m => [m, D.people.filter(p => p.justificativa === m).length]);
+  }
+
+  // Se o total de pendências não vier, calcula pelo cadastro individual.
+  if (D.meta.just_pendentes === undefined || D.meta.just_pendentes === null) {
+    D.meta.just_pendentes = D.people.filter(
+      p => ["CRÍTICO","ATENÇÃO"].includes(p.status) && !p.justificativa
+    ).length;
+  }
 filters.innerHTML=[['DATA',D.meta.data],['TURNO',D.meta.turno],['SETOR',D.meta.setor],['MODALIDADE','Todos'],['COLABORADOR','Todos']].map(x=>`<div class="filter"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
 kpis.innerHTML=`
 <div class="kpi"><div class="label">👥 STAFF PLANEJADO</div><div class="value">${D.meta.staff_planejado}</div></div>
@@ -57,7 +113,7 @@ const hours=['22h','23h','00h','01h','02h','03h','04h','05h'];
 function hourlyMeta(p){if(p.posicao==='SEPARAÇÃO(SECO)')return 350/8;if(p.posicao==='SEPARAÇÃO(DOCE)')return 300/8;if(p.posicao==='SEPARAÇÃO(PACK)')return 400/8;if(p.posicao==='SEPARAÇÃO(QUIMICO)')return 50/8;if(p.posicao==='REMONTE')return 450/8;return null}
 let h=`<thead><tr><th>#</th><th>MATR.</th><th>COLABORADOR</th><th>TIPO</th><th>POSIÇÃO</th>${hours.map(x=>`<th>${x}</th>`).join('')}<th>TOTAL</th><th>MÉDIA<br>HORA</th><th>ATING.<br>%</th><th>STATUS</th><th>JUSTIFICATIVA</th><th>RESP.</th></tr></thead><tbody>`;
 for(const p of D.people){const hm=hourlyMeta(p);h+=`<tr><td class="center">${p.n}</td><td class="center">${p.matricula}</td><td class="nm">${p.colaborador}</td><td>${p.tipo}</td><td>${p.posicao}</td>`;for(const v of p.horas){let c='hblue';if(hm!=null){let r=v/hm;c=r>=1?'hgreen':r>=.7?'hyellow':'hred'}else c='hblue';h+=`<td class="heat ${c}">${v}</td>`}const sc=p.status==='OK'?'s-ok':p.status==='ATENÇÃO'?'s-att':p.status==='CRÍTICO'?'s-crit':'s-just';h+=`<td class="num">${fmt(p.total)}</td><td class="num">${p.media.toFixed(1).replace('.',',')}</td><td class="heat ${p.ating==null?'hblue':p.ating>=1?'hgreen':p.ating>=.7?'hyellow':'hred'}">${pct(p.ating)}</td><td class="status ${sc}">${p.status}</td><td class="justcell">${p.justificativa||'—'}</td><td class="center">${p.resp||'—'}</td></tr>`}people.innerHTML=h+'</tbody>';
-let ph='<thead><tr><th>TIPOLOGIA</th><th>MÉDIA (DIA)</th><th>STAFF</th><th>PROJEÇÃO</th></tr></thead><tbody>';for(const r of D.projection)ph+=`<tr><td>${r[0]}</td><td class="center">${r[1]}</td><td class="center">${r[2]}</td><td class="num">${r[3]==='-'?'-':fmt(r[3])}</td></tr>`;ph+=`<tr class="total"><td colspan="2" class="center">TOTAL</td><td class="center">21</td><td class="num">${fmt(D.meta.projecao_turno)}</td></tr></tbody>`;projection.innerHTML=ph;
+let ph='<thead><tr><th>TIPOLOGIA</th><th>MÉDIA (DIA)</th><th>STAFF</th><th>PROJEÇÃO</th></tr></thead><tbody>';for(const r of D.projection)ph+=`<tr><td>${r[0]}</td><td class="center">${r[1]}</td><td class="center">${r[2]}</td><td class="num">${r[3]==='-'?'-':fmt(r[3])}</td></tr>`;ph+=`<tr class="total"><td colspan="2" class="center">TOTAL</td><td class="center">${fmt(D.meta.presentes)}</td><td class="num">${fmt(D.meta.projecao_turno)}</td></tr></tbody>`;projection.innerHTML=ph;
 compare.innerHTML=`<div><div class="meterrow"><span>Real</span><div class="meter"><i style="width:${D.meta.atingimento*100}%"></i></div><b>${fmt(D.meta.producao_real)}</b></div><div class="meterrow"><span>Projeção</span><div class="meter"><i style="width:100%;background:#9aaeb8"></i></div><b>${fmt(D.meta.projecao_turno)}</b></div></div><div><div class="bigpct">${pct(D.meta.atingimento)}</div><div style="font-size:10px;text-align:center">Atingimento<br>do turno</div></div>`;
 adherence.innerHTML=D.people.map(p=>{let val=p.ating==null?0:Math.min(p.ating,1.2), c=p.status==='JUSTIFICADO'?'#2a7d9f':p.ating>=1?'#13ad56':p.ating>=.7?'#f2c62d':'#ed3942';return `<div class="adhrow"><span>${p.colaborador.split(' ').slice(0,3).join(' ')}</span><div class="adhbar"><i style="width:${val/1.2*100}%;background:${c}"></i></div><b>${p.status==='JUSTIFICADO'?'JUST.':pct(p.ating)}</b></div>`}).join('');
 const totals=hours.map((_,i)=>D.people.reduce((a,p)=>a+(p.horas[i]||0),0));const max=Math.max(1100,...totals);const pts=totals.map((v,i)=>[55+i*82,170-v/max*130]);let svg=`<svg viewBox="0 0 660 205"><g stroke="#31576c" stroke-width="1">${[0,1,2,3].map(i=>`<line x1="45" y1="${35+i*43}" x2="640" y2="${35+i*43}"/>`).join('')}</g><line x1="45" y1="${170-(D.meta.projecao_turno/8)/max*130}" x2="640" y2="${170-(D.meta.projecao_turno/8)/max*130}" stroke="#9eb2bd" stroke-dasharray="6 5"/><polyline fill="none" stroke="#1da4f0" stroke-width="4" points="${pts.map(p=>p.join(',')).join(' ')}"/>${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#1da4f0"/><text x="${p[0]}" y="${p[1]-10}" fill="#fff" font-size="11" text-anchor="middle">${totals[i]}</text><text x="${p[0]}" y="193" fill="#c6d5de" font-size="11" text-anchor="middle">${hours[i]}</text>`).join('')}</svg>`;linechart.innerHTML=svg;

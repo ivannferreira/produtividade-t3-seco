@@ -167,7 +167,12 @@ try {
         $staff = if ($null -eq $staffRaw -or $staffRaw -eq "" -or $staffRaw -eq "-") { "-" } else { [int](Get-Number $staffRaw) }
         $proj = if ($null -eq $projRaw -or $projRaw -eq "" -or $projRaw -eq "-") { "-" } else { [int](Get-Number $projRaw) }
 
-        $projection += ,@($tipologia,$media,$staff,$proj)
+        $projection += [PSCustomObject]@{
+            tipologia = $tipologia
+            media_dia = $media
+            staff = $staff
+            projecao = $proj
+        }
     }
 
     # ---------- Ausências: apenas FALTA na aba T3 ----------
@@ -194,7 +199,10 @@ try {
     $reasons = @()
     foreach ($reason in $reasonNames) {
         $count = @($people | Where-Object { $_.justificativa -eq $reason }).Count
-        $reasons += ,@($reason,$count)
+        $reasons += [PSCustomObject]@{
+            motivo = $reason
+            quantidade = $count
+        }
     }
 
     $justPendentes = @(
