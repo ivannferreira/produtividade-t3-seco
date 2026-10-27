@@ -3,25 +3,6 @@ $ErrorActionPreference = "Stop"
 $repo = "C:\Users\ivferreira\Documents\GitHub\produtividade-t3-seco"
 $jsonPath = Join-Path $repo "dados_produtividade_individual.json"
 
-# Localiza a planilha operacional dentro do repositório.
-$excelFile = Get-ChildItem -Path $repo -Filter "Produtividade_T3_SECO*.xlsm" |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
-
-if (-not $excelFile) {
-    $excelFile = Get-ChildItem -Path $repo -Filter "*.xlsm" |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-}
-if (-not $excelFile) {
-    throw "Nenhum arquivo XLSM encontrado em $repo"
-}
-
-$excelPath = $excelFile.FullName
-$excel = $null
-$wb = $null
-$openedByScript = $false
-
 function Get-Text($value) {
     if ($null -eq $value) { return "" }
     return ([string]$value).Trim()
@@ -56,18 +37,22 @@ function Get-ValueBelowLabel($sheet, [string]$label, [int]$offsetRows, $fallback
     return $null
 }
 
+$excel = $null
+$wb = $null
+
 try {
-    # Tenta usar o Excel que já estiver aberto.
+    # IMPORTANTE: só usa o Excel já aberto. Não abre nenhuma planilha.
     try {
         $excel = [Runtime.InteropServices.Marshal]::GetActiveObject("Excel.Application")
     } catch {
-        $excel = New-Object -ComObject Excel.Application
-        $excel.Visible = $false
+        throw "Abra primeiro a planilha NOVA no Excel (a que contém a aba DASH_INDIVIDUAL) e execute novamente."
     }
 
+    # Procura somente um workbook ABERTO que contenha DASH_INDIVIDUAL.
     foreach ($book in $excel.Workbooks) {
         try {
-            if ($book.FullName -eq $excelPath -or $book.Name -like "Produtividade_T3_SECO*.xlsm") {
+            $dashTest = $book.Worksheets.Item("DASH_INDIVIDUAL")
+            if ($dashTest) {
                 $wb = $book
                 break
             }
@@ -75,8 +60,7 @@ try {
     }
 
     if (-not $wb) {
-        $wb = $excel.Workbooks.Open($excelPath, 0, $true)
-        $openedByScript = $true
+        throw "Nenhuma planilha aberta contém a aba DASH_INDIVIDUAL. Abra a planilha nova e tente novamente."
     }
 
     try { $excel.Calculate() } catch {}
@@ -117,6 +101,7 @@ try {
             if ($blankStreak -ge 5 -and $people.Count -gt 0) { break }
             continue
         }
+
         $blankStreak = 0
         $n++
 
@@ -147,7 +132,7 @@ try {
         }
     }
 
-    # ---------- Projeção por tipologia ----------
+    # ---------- Projeção ----------
     $projection = @()
     $projBlank = 0
     for ($r = 14; $r -le 30; $r++) {
@@ -157,25 +142,21 @@ try {
             if ($projBlank -ge 3 -and $projection.Count -gt 0) { break }
             continue
         }
-        $projBlank = 0
 
+        $projBlank = 0
         $mediaRaw = $dash.Cells.Item($r,21).Value2
         $staffRaw = $dash.Cells.Item($r,22).Value2
         $projRaw = $dash.Cells.Item($r,23).Value2
 
-        $media = if ($null -eq $mediaRaw -or $mediaRaw -eq "" -or $mediaRaw -eq "-") { "-" } else { Get-Number $mediaRaw }
-        $staff = if ($null -eq $staffRaw -or $staffRaw -eq "" -or $staffRaw -eq "-") { "-" } else { [int](Get-Number $staffRaw) }
-        $proj = if ($null -eq $projRaw -or $projRaw -eq "" -or $projRaw -eq "-") { "-" } else { [int](Get-Number $projRaw) }
-
         $projection += [PSCustomObject]@{
             tipologia = $tipologia
-            media_dia = $media
-            staff = $staff
-            projecao = $proj
+            media_dia = if ($mediaRaw -eq "-" -or $null -eq $mediaRaw) { "-" } else { Get-Number $mediaRaw }
+            staff = if ($staffRaw -eq "-" -or $null -eq $staffRaw) { "-" } else { [int](Get-Number $staffRaw) }
+            projecao = if ($projRaw -eq "-" -or $null -eq $projRaw) { "-" } else { [int](Get-Number $projRaw) }
         }
     }
 
-    # ---------- Ausências: apenas FALTA na aba T3 ----------
+    # ---------- Ausências ----------
     $absences = @()
     for ($r = 2; $r -le 150; $r++) {
         $nome = Get-Text $t3.Cells.Item($r,1).Value2
@@ -214,6 +195,7 @@ try {
 
     $payload = [PSCustomObject]@{
         atualizadoEm = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+        origem = $wb.Name
         meta = [PSCustomObject]@{
             data = $dataTexto
             turno = $turno
@@ -239,16 +221,17 @@ try {
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($jsonPath, $json, $utf8NoBom)
 
-    Write-Host "JSON atualizado: $jsonPath"
-    Write-Host "Colaboradores: $($people.Count) | Pendencias: $justPendentes | Producao: $producaoReal | Projecao: $projecaoTurno"
+    Write-Host ""
+    Write-Host "OK - JSON gerado usando SOMENTE a planilha aberta:"
+    Write-Host $wb.Name
+    Write-Host ""
+    Write-Host "Colaboradores: $($people.Count)"
+    Write-Host "Pendencias: $justPendentes"
+    Write-Host "Producao: $producaoReal"
+    Write-Host "Projecao: $projecaoTurno"
 }
 finally {
-    if ($openedByScript -and $wb) {
-        try { $wb.Close($false) } catch {}
-    }
-    if ($openedByScript -and $excel) {
-        try { $excel.Quit() } catch {}
-    }
+    # Não fecha Excel e não fecha workbook.
     if ($wb) { try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($wb) } catch {} }
     if ($excel) { try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($excel) } catch {} }
     [GC]::Collect()
