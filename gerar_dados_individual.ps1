@@ -142,17 +142,37 @@ try {
     }
 
     # ---------- Projeção ----------
-    # Espelha EXATAMENTE a tabela oficial da aba T3.
-    # T3!AX3:BA10 = 8 tipologias.
+    # Procura dinamicamente o cabeçalho "TIPOLOGIAS" na aba T3
+    # e espelha exatamente a tabela oficial, sem depender do número da linha.
     $projection = @()
+    $headerRow = $null
+    $headerCol = $null
 
-    for ($r = 3; $r -le 10; $r++) {
-        $tipologia = Get-Text $t3.Cells.Item($r,50).Value2   # AX
-        $mediaRaw  = $t3.Cells.Item($r,51).Value2           # AY
-        $staffRaw  = $t3.Cells.Item($r,52).Value2           # AZ
-        $projRaw   = $t3.Cells.Item($r,53).Value2           # BA
+    for ($r = 1; $r -le 40 -and -not $headerRow; $r++) {
+        for ($c = 1; $c -le 60; $c++) {
+            $txt = (Get-Text $t3.Cells.Item($r,$c).Value2).ToUpperInvariant()
+            if ($txt -eq "TIPOLOGIAS") {
+                $headerRow = $r
+                $headerCol = $c
+                break
+            }
+        }
+    }
 
-        if (-not $tipologia) { continue }
+    if (-not $headerRow) {
+        throw "Não encontrei o cabeçalho TIPOLOGIAS na aba T3."
+    }
+
+    # Lê as linhas imediatamente abaixo de TIPOLOGIAS até encontrar TOTAL ou linha vazia.
+    for ($r = $headerRow + 1; $r -le $headerRow + 15; $r++) {
+        $tipologia = Get-Text $t3.Cells.Item($r,$headerCol).Value2
+
+        if (-not $tipologia) { break }
+        if ($tipologia.ToUpperInvariant() -eq "TOTAL") { break }
+
+        $mediaRaw = $t3.Cells.Item($r,$headerCol + 1).Value2
+        $staffRaw = $t3.Cells.Item($r,$headerCol + 2).Value2
+        $projRaw  = $t3.Cells.Item($r,$headerCol + 3).Value2
 
         $projection += [PSCustomObject]@{
             tipologia = $tipologia
@@ -162,9 +182,10 @@ try {
         }
     }
 
-    # Totais oficiais da própria T3.
-    $staffProjTotal = [int](Get-Number $t3.Cells.Item(11,52).Value2)   # AZ11
-    $projecaoTurno  = [int](Get-Number $t3.Cells.Item(11,53).Value2)   # BA11
+    # Busca a linha TOTAL logo abaixo da tabela oficial.
+    $totalRow = $headerRow + 1 + $projection.Count
+    $staffProjTotal = [int](Get-Number $t3.Cells.Item($totalRow,$headerCol + 2).Value2)
+    $projecaoTurno  = [int](Get-Number $t3.Cells.Item($totalRow,$headerCol + 3).Value2)
 
     # Produção real = soma dos totais individuais exibidos no DASH.
     $producaoReal = [int](($people | Measure-Object -Property total -Sum).Sum)
@@ -174,6 +195,14 @@ try {
     } else {
         $atingimento = 0
     }
+
+    Write-Host ""
+    Write-Host "Tabela de projecao encontrada na T3:"
+    foreach ($p in $projection) {
+        Write-Host (" - {0} | Media: {1} | Staff: {2} | Projecao: {3}" -f $p.tipologia,$p.media_dia,$p.staff,$p.projecao)
+    }
+    Write-Host ("TOTAL | Staff: {0} | Projecao: {1}" -f $staffProjTotal,$projecaoTurno)
+    Write-Host ""
 
     # ---------- Ausências ----------
     # Lê diretamente a lista oficial "AUSENCIAS" da aba T3 (coluna BD),
