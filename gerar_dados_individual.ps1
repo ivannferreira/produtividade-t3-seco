@@ -194,12 +194,14 @@ try {
     }
 
     # ---------- Ausências ----------
+    # Lê diretamente a lista oficial "AUSENCIAS" da aba T3 (coluna BD),
+    # para bater exatamente com o total exibido no painel.
     $absences = @()
-    for ($r = 2; $r -le 150; $r++) {
-        $nome = Get-Text $t3.Cells.Item($r,1).Value2
-        $pos = (Get-Text $t3.Cells.Item($r,3).Value2).ToUpperInvariant()
-        if ($nome -and $nome -ne "OPEN POSITION" -and $pos -eq "FALTA") {
-            $absences += $nome
+
+    for ($r = 2; $r -le 30; $r++) {
+        $nomeAusencia = Get-Text $t3.Cells.Item($r,56).Value2   # BD
+        if ($nomeAusencia) {
+            $absences += $nomeAusencia
         }
     }
 
