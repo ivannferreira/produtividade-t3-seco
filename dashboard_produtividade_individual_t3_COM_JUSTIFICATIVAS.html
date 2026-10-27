@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Produtividade Individual — T3 SECO</title>
+<style>
+:root{
+  --bg:#031823;--panel:#062638;--panel2:#083148;--panel3:#0b3c58;--line:#1e5875;
+  --txt:#f6fbff;--muted:#b7c8d2;--blue:#168fe4;--blue2:#0e6fb5;--green:#08a650;
+  --green2:#19c463;--yellow:#ffcc32;--red:#ef3340;--white:#fff;--light:#eef3f6;--ink:#10212c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#041821;color:var(--txt);font-family:Segoe UI,Arial,sans-serif}
+body{padding:8px}.dash{max-width:1920px;margin:auto;background:linear-gradient(180deg,#031621,#041c29 70%,#03151f)}
+.topbar{display:flex;align-items:center;gap:24px;padding:16px 18px;border:1px solid var(--line);background:#061d2d}
+.logo{display:flex;gap:12px;align-items:center;min-width:470px}.bars{display:flex;gap:4px;align-items:flex-end;height:35px}.bars i{width:8px;border-radius:3px 3px 0 0;background:linear-gradient(#25d7cb,#14a7ff)}.bars i:nth-child(1){height:16px}.bars i:nth-child(2){height:25px}.bars i:nth-child(3){height:35px}
+.title{font-size:31px;font-weight:900;letter-spacing:.2px}.subtitle{font-size:18px;color:#b7c7d2;margin-top:2px}.filters{margin-left:auto;display:grid;grid-template-columns:1.15fr .8fr .9fr 1.05fr 1.2fr;gap:12px;width:66%}
+.filter{background:linear-gradient(180deg,#0a3146,#08283a);border:1px solid #27637f;border-radius:8px;padding:10px 14px;min-height:64px;display:flex;flex-direction:column;justify-content:center}.filter b{font-size:11px;color:#9fc0d1;display:block;letter-spacing:.45px}.filter span{font-size:18px;font-weight:800;display:block;margin-top:6px;color:#fff}
+.kpis{display:grid;grid-template-columns:1.08fr 1fr 1fr 1fr 1.35fr 1.35fr 1.35fr;gap:7px;margin:7px 0}
+.kpi{min-height:91px;border:1px solid var(--line);background:linear-gradient(#0b3550,#08273a);border-radius:7px;padding:10px 12px;text-align:center;position:relative}.kpi.red{background:linear-gradient(#ef2f3b,#cf1724)}.kpi.green{background:linear-gradient(#10ad58,#078944)}.kpi .label{font-size:11px;font-weight:800}.kpi .value{font-size:31px;font-weight:900;margin-top:5px}.kpi .small{font-size:10px;color:#d7e3e9}.accent{outline:3px solid #fb2734;outline-offset:-3px}.ring{width:55px;height:55px;border-radius:50%;margin:0 auto;background:conic-gradient(#1fd6b1 0 var(--pct),#0e4b61 var(--pct) 100%);position:relative}.ring:after{content:"";position:absolute;inset:12px;border-radius:50%;background:#0a2c40}
+.grid{display:grid;grid-template-columns:3.2fr 1fr;gap:7px}.panel{border:1px solid var(--line);background:#062638;border-radius:6px;overflow:hidden}.ptitle{font-size:15px;font-weight:900;background:#0a3550;padding:8px 10px;border-bottom:1px solid var(--line)}
+.tablewrap{overflow:auto;max-height:485px}table{border-collapse:collapse;width:100%}th{background:#0a3650;color:#fff;font-size:10px;padding:7px 5px;border-right:1px solid #315971;white-space:nowrap}td{padding:6px 5px;border-right:1px solid #22495e;border-bottom:1px solid #17394b;font-size:11px;white-space:nowrap}.num{text-align:right;font-variant-numeric:tabular-nums}.center{text-align:center}.nm{max-width:225px;overflow:hidden;text-overflow:ellipsis}.heat{font-weight:900;text-align:center}.hgreen{background:#0e9c49}.hyellow{background:#f0c631;color:#101b22}.hred{background:#e6303a}.hblue{background:#166b9a}.status{font-weight:900}.s-ok{color:#21d674}.s-att{color:#ffd34a}.s-crit{color:#ff4f58}.s-just{color:#56c9ff}
+.rightcol{display:grid;gap:7px;align-content:start}.proj td,.proj th{font-size:10px}.proj tbody td{background:#f3f6f8;color:#13242e;border-color:#c3d0d8}.proj .total td{background:#0aaa50;color:#fff;font-weight:900}
+.compare{display:grid;grid-template-columns:1fr 90px;gap:10px;padding:10px}.meterrow{display:grid;grid-template-columns:70px 1fr 55px;gap:7px;align-items:center;margin:7px 0}.meter{height:13px;background:#315464;border-radius:4px;overflow:hidden}.meter i{height:100%;display:block;background:#1ea6ef}.bigpct{font-size:32px;font-weight:900;text-align:center}
+.bottom{display:grid;grid-template-columns:1.08fr 1.1fr 1.1fr .9fr;gap:7px;margin-top:7px}.boxbody{padding:10px}.adhrow{display:grid;grid-template-columns:145px 1fr 45px;gap:7px;align-items:center;margin:6px 0;font-size:11px}.adhbar{height:13px;background:#13384a;border-radius:3px;overflow:hidden}.adhbar i{display:block;height:100%}.linechart{height:205px;padding:8px 12px 12px}.linechart svg{width:100%;height:100%}.reasons{padding:8px 10px}.reason{display:grid;grid-template-columns:125px 1fr 35px;gap:7px;align-items:center;margin:6px 0;font-size:10px}.rbar{height:10px;background:#0c1f2a;border-radius:4px;overflow:hidden}.rbar i{display:block;height:100%;background:#168fe4}.pending table td,.pending table th{font-size:10px}.pend{background:#fff3bd;color:#222;font-weight:900}.absences{height:100%}.absences li{list-style:none;background:#f2f5f7;color:#13232d;border-bottom:1px solid #c4d0d7;padding:9px 7px;text-align:center;font-size:10px}.absences ul{padding:0;margin:0}.badge{float:right;background:#ef3340;padding:3px 10px;border-radius:4px;font-size:16px}
+.justcell{font-weight:800;color:#dcecff;max-width:170px;overflow:hidden;text-overflow:ellipsis}.justcell:not(:has(*)){ }
+
+.footer{padding:8px;color:#8fa9b8;font-size:10px}
+@media(max-width:1300px){.filters{width:55%;grid-template-columns:repeat(3,1fr)}.kpis{grid-template-columns:repeat(4,1fr)}.grid,.bottom{grid-template-columns:1fr}.logo{min-width:0}.topbar{align-items:flex-start;flex-direction:column}.filters{width:100%}}
+</style>
+</head>
+<body><div class="dash">
+<div class="topbar"><div class="logo"><div class="bars"><i></i><i></i><i></i></div><div><div class="title">PRODUTIVIDADE INDIVIDUAL — T3</div><div class="subtitle">SECO</div></div></div><div class="filters" id="filters"></div></div>
+<div class="kpis" id="kpis"></div>
+<div class="grid"><section class="panel"><div class="ptitle">PRODUTIVIDADE INDIVIDUAL — HORA A HORA</div><div class="tablewrap"><table id="people"></table></div></section><aside class="rightcol"><section class="panel"><div class="ptitle">PROJEÇÃO POR TIPOLOGIA</div><table class="proj" id="projection"></table></section><section class="panel"><div class="ptitle">PRODUÇÃO VS PROJEÇÃO</div><div class="compare" id="compare"></div></section></aside></div>
+<div class="bottom"><section class="panel"><div class="ptitle">ADERÊNCIA À META (POR PESSOA)</div><div class="boxbody" id="adherence"></div></section><section class="panel"><div class="ptitle">PRODUÇÃO HORA A HORA (TODOS COLABORADORES)</div><div class="linechart" id="linechart"></div></section><section><div class="panel"><div class="ptitle">PRINCIPAIS MOTIVOS DAS JUSTIFICATIVAS</div><div class="reasons" id="reasons"></div></div><div class="panel pending" style="margin-top:7px"><div class="ptitle">JUSTIFICATIVAS PENDENTES <span class="badge" id="pendBadge"></span></div><div class="tablewrap" style="max-height:230px"><table id="pending"></table></div></div></section><aside><section class="panel absences"><div class="ptitle">AUSÊNCIAS DO TURNO <span class="badge" id="absBadge"></span></div><ul id="absences"></ul></section></aside></div>
+<div class="footer">Fonte: Produtividade Hora a Hora T3 SECO — dados consolidados do Excel.</div>
+</div>
+<script>
+const D = {
+ meta:{data:'27/10/2026',turno:'T3',setor:'SECO',modalidade:'TODOS',colaborador:'TODOS',staff_planejado:28,presentes:21,ausentes:7,presenca:.75,producao_real:2854,projecao_turno:5750,atingimento:2854/5750,just_pendentes:11},
+ people:[
+ {n:1,matricula:84000,colaborador:'ALEX DE ABREU',tipo:'SEPARAÇÃO',posicao:'DEVOLUÇÃO',horas:[0,0,0,0,0,0,0,0],total:0,media:0,ating:null,status:'JUSTIFICADO',justificativa:'BAIXA SISTÊMICA',resp:'WILLIANS'},
+ {n:2,matricula:84153,colaborador:'CARLOS ALBERTO DE SOUZA',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,49,18,81,41,0,0,0],total:189,media:23.625,ating:.54,status:'CRÍTICO',justificativa:'PAUSA / CEIA',resp:'WILLIANS'},
+ {n:3,matricula:80025,colaborador:'BALDUINO TAVARES ALVES',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,0,0,0,0,0],total:0,media:0,ating:0,status:'CRÍTICO',justificativa:'OSCILAÇÃO COLETOR',resp:'WILLIANS'},
+ {n:4,matricula:83547,colaborador:'BRUNA MARIA PETRONILHO ZACHELLO',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(PACK)',horas:[0,86,74,42,119,0,0,0],total:321,media:40.125,ating:.8025,status:'ATENÇÃO',justificativa:'DIVERGÊNCIA ESTOQUE',resp:'WILLIANS'},
+ {n:5,matricula:84164,colaborador:'RICHARD KAUAN',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,70,75,0,0,0],total:145,media:18.125,ating:.322222,status:'CRÍTICO'},
+ {n:6,matricula:83249,colaborador:'DANIEL BARBOSA DA SILVA',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,76,136,0,0,0],total:212,media:26.5,ating:.471111,status:'CRÍTICO'},
+ {n:7,matricula:83884,colaborador:'DANIEL SALDANHA DA ROSA',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,52,10,28,33,0,0,0],total:123,media:15.375,ating:.351429,status:'CRÍTICO'},
+ {n:8,matricula:80079,colaborador:'EZEQUIEL MOREIRA DE ARRUDA',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,95,39,29,60,0,0,0],total:223,media:27.875,ating:.637143,status:'CRÍTICO'},
+ {n:9,matricula:83128,colaborador:'LARISSA SILVEIRA ROMUALDO RODRIGUES',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,187,140,0,0,0],total:327,media:40.875,ating:.726667,status:'ATENÇÃO'},
+ {n:10,matricula:83885,colaborador:'PABLO VINICIUS DE OLIVEIRA CARVALHO',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,70,0,0,0,0,0],total:70,media:8.75,ating:.155556,status:'CRÍTICO'},
+ {n:11,matricula:83108,colaborador:'PAMELA VENITE DE SOUZA',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,146,172,0,0,0],total:318,media:39.75,ating:.706667,status:'ATENÇÃO'},
+ {n:12,matricula:83859,colaborador:'RAFAELA DE JESUS SANTOS',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(PACK)',horas:[0,44,59,31,63,0,0,0],total:197,media:24.625,ating:.4925,status:'CRÍTICO'},
+ {n:13,matricula:81784,colaborador:'RIAN DOS SANTOS',tipo:'REMONTE',posicao:'APOIO',horas:[0,0,0,0,0,0,0,0],total:0,media:0,ating:null,status:'JUSTIFICADO'},
+ {n:14,matricula:80631,colaborador:'ROBERVAL POSTALE',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,85,0,67,47,0,0,0],total:199,media:24.875,ating:.568571,status:'CRÍTICO'},
+ {n:15,matricula:83959,colaborador:'RODRIGO DE SA LIMA',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,204,70,0,0,0],total:274,media:34.25,ating:.608889,status:'CRÍTICO'},
+ {n:16,matricula:82802,colaborador:'SOLANGE DE MATOS ANTUNES',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(PACK)',horas:[0,48,123,15,70,0,0,0],total:256,media:32,ating:.64,status:'CRÍTICO'}],
+ projection:[['SEPARAÇÃO(SECO)',350,4,1400],['SEPARAÇÃO(DOCE)',300,0,0],['SEPARAÇÃO(PACK)',400,3,1200],['SEPARAÇÃO(QUIMICO)',50,0,0],['REMONTE',450,7,3150],['EMPILHADOR','-',5,'-'],['APOIO','-',1,'-'],['DEVOLUÇÃO','-',1,'-']],
+ absences:['ALESSANDRO WILLY DE JESUS PEREIRA','ALEX DA SILVA','MARCELO ANTONIO DA SILVA','NATALI QUINTINO','RAFAEL APARECIDO PINTO','RAMON ELISIARIO CAVALCANTE DA SILVA','REINALDO EVANGELISTA DOS SANTOS'],
+ reasons:[['FALTA DE ETIQUETA',0],['OSCILAÇÃO COLETOR',1],['BAIXA SISTÊMICA',1],['PAUSA / CEIA',1],['DIVERGÊNCIA ESTOQUE',1],['RETRABALHO',0],['BAIXA PERFORMANCE',0]]
+};
+const fmt=n=>Number(n||0).toLocaleString('pt-BR'); const pct=x=>x==null?'—':Math.round(x*100)+'%';
+filters.innerHTML=[['DATA',D.meta.data],['TURNO',D.meta.turno],['SETOR',D.meta.setor],['MODALIDADE','Todos'],['COLABORADOR','Todos']].map(x=>`<div class="filter"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
+kpis.innerHTML=`
+<div class="kpi"><div class="label">👥 STAFF PLANEJADO</div><div class="value">${D.meta.staff_planejado}</div></div>
+<div class="kpi"><div class="label">● PRESENTES</div><div class="value">${D.meta.presentes}</div></div>
+<div class="kpi red"><div class="label">👤 AUSENTES</div><div class="value">${D.meta.ausentes}</div></div>
+<div class="kpi green"><div class="label">✓ % PRESENÇA</div><div class="value">${pct(D.meta.presenca)}</div></div>
+<div class="kpi accent"><div class="label">▣ PRODUÇÃO REAL</div><div class="value">${fmt(D.meta.producao_real)}</div><div class="small">CXS</div></div>
+<div class="kpi accent"><div class="label">▥ PROJEÇÃO TURNO</div><div class="value">${fmt(D.meta.projecao_turno)}</div><div class="small">CXS</div></div>
+<div class="kpi accent"><div class="label">ATINGIMENTO</div><div class="ring" style="--pct:${D.meta.atingimento*100}%"></div><div style="font-size:18px;font-weight:900;margin-top:-39px;position:relative;z-index:2">${pct(D.meta.atingimento)}</div></div>`;
+const hours=['22h','23h','00h','01h','02h','03h','04h','05h'];
+function hourlyMeta(p){if(p.posicao==='SEPARAÇÃO(SECO)')return 350/8;if(p.posicao==='SEPARAÇÃO(DOCE)')return 300/8;if(p.posicao==='SEPARAÇÃO(PACK)')return 400/8;if(p.posicao==='SEPARAÇÃO(QUIMICO)')return 50/8;if(p.posicao==='REMONTE')return 450/8;return null}
+let h=`<thead><tr><th>#</th><th>MATR.</th><th>COLABORADOR</th><th>TIPO</th><th>POSIÇÃO</th>${hours.map(x=>`<th>${x}</th>`).join('')}<th>TOTAL</th><th>MÉDIA<br>HORA</th><th>ATING.<br>%</th><th>STATUS</th><th>JUSTIFICATIVA</th><th>RESP.</th></tr></thead><tbody>`;
+for(const p of D.people){const hm=hourlyMeta(p);h+=`<tr><td class="center">${p.n}</td><td class="center">${p.matricula}</td><td class="nm">${p.colaborador}</td><td>${p.tipo}</td><td>${p.posicao}</td>`;for(const v of p.horas){let c='hblue';if(hm!=null){let r=v/hm;c=r>=1?'hgreen':r>=.7?'hyellow':'hred'}else c='hblue';h+=`<td class="heat ${c}">${v}</td>`}const sc=p.status==='OK'?'s-ok':p.status==='ATENÇÃO'?'s-att':p.status==='CRÍTICO'?'s-crit':'s-just';h+=`<td class="num">${fmt(p.total)}</td><td class="num">${p.media.toFixed(1).replace('.',',')}</td><td class="heat ${p.ating==null?'hblue':p.ating>=1?'hgreen':p.ating>=.7?'hyellow':'hred'}">${pct(p.ating)}</td><td class="status ${sc}">${p.status}</td><td class="justcell">${p.justificativa||'—'}</td><td class="center">${p.resp||'—'}</td></tr>`}people.innerHTML=h+'</tbody>';
+let ph='<thead><tr><th>TIPOLOGIA</th><th>MÉDIA (DIA)</th><th>STAFF</th><th>PROJEÇÃO</th></tr></thead><tbody>';for(const r of D.projection)ph+=`<tr><td>${r[0]}</td><td class="center">${r[1]}</td><td class="center">${r[2]}</td><td class="num">${r[3]==='-'?'-':fmt(r[3])}</td></tr>`;ph+=`<tr class="total"><td colspan="2" class="center">TOTAL</td><td class="center">21</td><td class="num">${fmt(D.meta.projecao_turno)}</td></tr></tbody>`;projection.innerHTML=ph;
+compare.innerHTML=`<div><div class="meterrow"><span>Real</span><div class="meter"><i style="width:${D.meta.atingimento*100}%"></i></div><b>${fmt(D.meta.producao_real)}</b></div><div class="meterrow"><span>Projeção</span><div class="meter"><i style="width:100%;background:#9aaeb8"></i></div><b>${fmt(D.meta.projecao_turno)}</b></div></div><div><div class="bigpct">${pct(D.meta.atingimento)}</div><div style="font-size:10px;text-align:center">Atingimento<br>do turno</div></div>`;
+adherence.innerHTML=D.people.map(p=>{let val=p.ating==null?0:Math.min(p.ating,1.2), c=p.status==='JUSTIFICADO'?'#2a7d9f':p.ating>=1?'#13ad56':p.ating>=.7?'#f2c62d':'#ed3942';return `<div class="adhrow"><span>${p.colaborador.split(' ').slice(0,3).join(' ')}</span><div class="adhbar"><i style="width:${val/1.2*100}%;background:${c}"></i></div><b>${p.status==='JUSTIFICADO'?'JUST.':pct(p.ating)}</b></div>`}).join('');
+const totals=hours.map((_,i)=>D.people.reduce((a,p)=>a+(p.horas[i]||0),0));const max=Math.max(1100,...totals);const pts=totals.map((v,i)=>[55+i*82,170-v/max*130]);let svg=`<svg viewBox="0 0 660 205"><g stroke="#31576c" stroke-width="1">${[0,1,2,3].map(i=>`<line x1="45" y1="${35+i*43}" x2="640" y2="${35+i*43}"/>`).join('')}</g><line x1="45" y1="${170-(D.meta.projecao_turno/8)/max*130}" x2="640" y2="${170-(D.meta.projecao_turno/8)/max*130}" stroke="#9eb2bd" stroke-dasharray="6 5"/><polyline fill="none" stroke="#1da4f0" stroke-width="4" points="${pts.map(p=>p.join(',')).join(' ')}"/>${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#1da4f0"/><text x="${p[0]}" y="${p[1]-10}" fill="#fff" font-size="11" text-anchor="middle">${totals[i]}</text><text x="${p[0]}" y="193" fill="#c6d5de" font-size="11" text-anchor="middle">${hours[i]}</text>`).join('')}</svg>`;linechart.innerHTML=svg;
+const maxR=Math.max(1,...D.reasons.map(x=>x[1]));reasons.innerHTML=D.reasons.map(r=>`<div class="reason"><span>${r[0]}</span><div class="rbar"><i style="width:${r[1]/maxR*100}%"></i></div><b>${r[1]}</b></div>`).join('');
+const pending=D.people.filter(p=>['CRÍTICO','ATENÇÃO'].includes(p.status) && !p.justificativa);pendBadge.textContent=pending.length;let pend='<thead><tr><th>COLABORADOR</th><th>STATUS</th><th>ATING.</th><th>JUSTIFICATIVA</th></tr></thead><tbody>';for(const p of pending)pend+=`<tr><td>${p.colaborador}</td><td class="center">${p.status}</td><td class="center">${pct(p.ating)}</td><td class="center pend">PENDENTE</td></tr>`;pending.innerHTML=pend+'</tbody>';
+absBadge.textContent=D.meta.ausentes;absences.innerHTML=D.absences.map(x=>`<li>${x}</li>`).join('');
+</script></body></html>
