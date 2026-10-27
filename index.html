@@ -38,30 +38,12 @@ body{padding:8px}.dash{max-width:1920px;margin:auto;background:linear-gradient(1
 <div class="footer">Fonte: Produtividade Hora a Hora T3 SECO — dados consolidados do Excel.</div>
 </div>
 <script>
-const D = {
- meta:{data:'27/10/2026',turno:'T3',setor:'SECO',modalidade:'TODOS',colaborador:'TODOS',staff_planejado:28,presentes:21,ausentes:7,presenca:.75,producao_real:2854,projecao_turno:5750,atingimento:2854/5750,just_pendentes:11},
- people:[
- {n:1,matricula:84000,colaborador:'ALEX DE ABREU',tipo:'SEPARAÇÃO',posicao:'DEVOLUÇÃO',horas:[0,0,0,0,0,0,0,0],total:0,media:0,ating:null,status:'JUSTIFICADO',justificativa:'BAIXA SISTÊMICA',resp:'WILLIANS'},
- {n:2,matricula:84153,colaborador:'CARLOS ALBERTO DE SOUZA',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,49,18,81,41,0,0,0],total:189,media:23.625,ating:.54,status:'CRÍTICO',justificativa:'PAUSA / CEIA',resp:'WILLIANS'},
- {n:3,matricula:80025,colaborador:'BALDUINO TAVARES ALVES',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,0,0,0,0,0],total:0,media:0,ating:0,status:'CRÍTICO',justificativa:'OSCILAÇÃO COLETOR',resp:'WILLIANS'},
- {n:4,matricula:83547,colaborador:'BRUNA MARIA PETRONILHO ZACHELLO',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(PACK)',horas:[0,86,74,42,119,0,0,0],total:321,media:40.125,ating:.8025,status:'ATENÇÃO',justificativa:'DIVERGÊNCIA ESTOQUE',resp:'WILLIANS'},
- {n:5,matricula:84164,colaborador:'RICHARD KAUAN',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,70,75,0,0,0],total:145,media:18.125,ating:.322222,status:'CRÍTICO'},
- {n:6,matricula:83249,colaborador:'DANIEL BARBOSA DA SILVA',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,76,136,0,0,0],total:212,media:26.5,ating:.471111,status:'CRÍTICO'},
- {n:7,matricula:83884,colaborador:'DANIEL SALDANHA DA ROSA',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,52,10,28,33,0,0,0],total:123,media:15.375,ating:.351429,status:'CRÍTICO'},
- {n:8,matricula:80079,colaborador:'EZEQUIEL MOREIRA DE ARRUDA',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,95,39,29,60,0,0,0],total:223,media:27.875,ating:.637143,status:'CRÍTICO'},
- {n:9,matricula:83128,colaborador:'LARISSA SILVEIRA ROMUALDO RODRIGUES',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,187,140,0,0,0],total:327,media:40.875,ating:.726667,status:'ATENÇÃO'},
- {n:10,matricula:83885,colaborador:'PABLO VINICIUS DE OLIVEIRA CARVALHO',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,70,0,0,0,0,0],total:70,media:8.75,ating:.155556,status:'CRÍTICO'},
- {n:11,matricula:83108,colaborador:'PAMELA VENITE DE SOUZA',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,146,172,0,0,0],total:318,media:39.75,ating:.706667,status:'ATENÇÃO'},
- {n:12,matricula:83859,colaborador:'RAFAELA DE JESUS SANTOS',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(PACK)',horas:[0,44,59,31,63,0,0,0],total:197,media:24.625,ating:.4925,status:'CRÍTICO'},
- {n:13,matricula:81784,colaborador:'RIAN DOS SANTOS',tipo:'REMONTE',posicao:'APOIO',horas:[0,0,0,0,0,0,0,0],total:0,media:0,ating:null,status:'JUSTIFICADO'},
- {n:14,matricula:80631,colaborador:'ROBERVAL POSTALE',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(SECO)',horas:[0,85,0,67,47,0,0,0],total:199,media:24.875,ating:.568571,status:'CRÍTICO'},
- {n:15,matricula:83959,colaborador:'RODRIGO DE SA LIMA',tipo:'REMONTE',posicao:'REMONTE',horas:[0,0,0,204,70,0,0,0],total:274,media:34.25,ating:.608889,status:'CRÍTICO'},
- {n:16,matricula:82802,colaborador:'SOLANGE DE MATOS ANTUNES',tipo:'SEPARAÇÃO',posicao:'SEPARAÇÃO(PACK)',horas:[0,48,123,15,70,0,0,0],total:256,media:32,ating:.64,status:'CRÍTICO'}],
- projection:[['SEPARAÇÃO(SECO)',350,4,1400],['SEPARAÇÃO(DOCE)',300,0,0],['SEPARAÇÃO(PACK)',400,3,1200],['SEPARAÇÃO(QUIMICO)',50,0,0],['REMONTE',450,7,3150],['EMPILHADOR','-',5,'-'],['APOIO','-',1,'-'],['DEVOLUÇÃO','-',1,'-']],
- absences:['ALESSANDRO WILLY DE JESUS PEREIRA','ALEX DA SILVA','MARCELO ANTONIO DA SILVA','NATALI QUINTINO','RAFAEL APARECIDO PINTO','RAMON ELISIARIO CAVALCANTE DA SILVA','REINALDO EVANGELISTA DOS SANTOS'],
- reasons:[['FALTA DE ETIQUETA',0],['OSCILAÇÃO COLETOR',1],['BAIXA SISTÊMICA',1],['PAUSA / CEIA',1],['DIVERGÊNCIA ESTOQUE',1],['RETRABALHO',0],['BAIXA PERFORMANCE',0]]
-};
+let D = null;
 const fmt=n=>Number(n||0).toLocaleString('pt-BR'); const pct=x=>x==null?'—':Math.round(x*100)+'%';
+async function carregarDados(){
+  const resposta = await fetch('dados_produtividade_individual.json?ts=' + Date.now(), {cache:'no-store'});
+  if(!resposta.ok) throw new Error('Falha ao carregar dados: ' + resposta.status);
+  D = await resposta.json();
 filters.innerHTML=[['DATA',D.meta.data],['TURNO',D.meta.turno],['SETOR',D.meta.setor],['MODALIDADE','Todos'],['COLABORADOR','Todos']].map(x=>`<div class="filter"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
 kpis.innerHTML=`
 <div class="kpi"><div class="label">👥 STAFF PLANEJADO</div><div class="value">${D.meta.staff_planejado}</div></div>
@@ -82,4 +64,11 @@ const totals=hours.map((_,i)=>D.people.reduce((a,p)=>a+(p.horas[i]||0),0));const
 const maxR=Math.max(1,...D.reasons.map(x=>x[1]));reasons.innerHTML=D.reasons.map(r=>`<div class="reason"><span>${r[0]}</span><div class="rbar"><i style="width:${r[1]/maxR*100}%"></i></div><b>${r[1]}</b></div>`).join('');
 const pending=D.people.filter(p=>['CRÍTICO','ATENÇÃO'].includes(p.status) && !p.justificativa);pendBadge.textContent=pending.length;let pend='<thead><tr><th>COLABORADOR</th><th>STATUS</th><th>ATING.</th><th>JUSTIFICATIVA</th></tr></thead><tbody>';for(const p of pending)pend+=`<tr><td>${p.colaborador}</td><td class="center">${p.status}</td><td class="center">${pct(p.ating)}</td><td class="center pend">PENDENTE</td></tr>`;pending.innerHTML=pend+'</tbody>';
 absBadge.textContent=D.meta.ausentes;absences.innerHTML=D.absences.map(x=>`<li>${x}</li>`).join('');
+
+}
+carregarDados().catch(err=>{
+  console.error(err);
+  document.body.insertAdjacentHTML('beforeend',
+    '<div style="position:fixed;left:20px;bottom:20px;background:#b91c1c;color:#fff;padding:12px 16px;border-radius:8px;font:600 14px Segoe UI;z-index:9999">Erro ao carregar dados do painel. Verifique o JSON.</div>');
+});
 </script></body></html>
