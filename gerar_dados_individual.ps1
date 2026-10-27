@@ -205,16 +205,54 @@ try {
     Write-Host ""
 
     # ---------- Ausências ----------
-    # Lê diretamente a lista oficial "AUSENCIAS" da aba T3 (coluna BD),
-    # para bater exatamente com o total exibido no painel.
+    # Procura dinamicamente o cabeçalho AUSENCIAS na aba T3
+    # e lê os nomes exatamente abaixo dele.
     $absences = @()
+    $ausHeaderRow = $null
+    $ausHeaderCol = $null
 
-    for ($r = 2; $r -le 30; $r++) {
-        $nomeAusencia = Get-Text $t3.Cells.Item($r,56).Value2   # BD
-        if ($nomeAusencia) {
-            $absences += $nomeAusencia
+    for ($r = 1; $r -le 40 -and -not $ausHeaderRow; $r++) {
+        for ($c = 1; $c -le 60; $c++) {
+            $txt = (Get-Text $t3.Cells.Item($r,$c).Value2).ToUpperInvariant()
+            if ($txt -eq "AUSENCIAS" -or $txt -eq "AUSÊNCIAS") {
+                $ausHeaderRow = $r
+                $ausHeaderCol = $c
+                break
+            }
         }
     }
+
+    if (-not $ausHeaderRow) {
+        throw "Não encontrei o cabeçalho AUSENCIAS na aba T3."
+    }
+
+    # Lê os nomes nas linhas abaixo do cabeçalho.
+    # Para quando encontrar várias linhas vazias consecutivas.
+    $blankAus = 0
+    for ($r = $ausHeaderRow + 1; $r -le $ausHeaderRow + 30; $r++) {
+        $nomeAusencia = Get-Text $t3.Cells.Item($r,$ausHeaderCol).Value2
+
+        if (-not $nomeAusencia) {
+            $blankAus++
+            if ($blankAus -ge 3 -and $absences.Count -gt 0) { break }
+            continue
+        }
+
+        $blankAus = 0
+        $nomeUpper = $nomeAusencia.ToUpperInvariant()
+
+        # Ignora cabeçalhos/linhas auxiliares caso existam na mesma região.
+        if ($nomeUpper -in @("TOTAL","COLABORADOR","AUSENCIAS","AUSÊNCIAS")) { continue }
+
+        $absences += $nomeAusencia
+    }
+
+    Write-Host ""
+    Write-Host "Ausencias encontradas na T3: $($absences.Count)"
+    foreach ($a in $absences) {
+        Write-Host (" - " + $a)
+    }
+    Write-Host ""
 
     # ---------- Motivos ----------
     $reasonNames = @(
